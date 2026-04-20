@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+  <h2 class="mb-4">Edit Customer</h2>
+
+  <form method="post" class="card shadow-sm p-4">
+    {% csrf_token %}
+
+    <!-- Show Oracle errors nicely -->
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.first_name.label_tag }}
+        {{ form.first_name }}
+      </div>
+      <div class="col-md-6">
+        {{ form.last_name.label_tag }}
+        {{ form.last_name }}
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.gender.label_tag }}
+        {{ form.gender }}
+      </div>
+      <div class="col-md-6">
+        {{ form.date_of_birth.label_tag }}
+        {{ form.date_of_birth }}
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.id_type.label_tag }}
+        {{ form.id_type }}
+      </div>
+      <div class="col-md-6">
+        {{ form.id_number.label_tag }}
+        {{ form.id_number }}
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.email.label_tag }}
+        {{ form.email }}
+      </div>
+      <div class="col-md-6">
+        {{ form.phone_number.label_tag }}
+        {{ form.phone_number }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      {{ form.address.label_tag }}
+      {{ form.address }}
+    </div>
+
+    <!-- Role & Status (readonly) -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.role_id.label_tag }}
+        {{ form.role_id }}
+      </div>
+      <div class="col-md-6">
+        {{ form.status.label_tag }}
+        {{ form.status }}
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <a href="{% url 'customer_list' %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

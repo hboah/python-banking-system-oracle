@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Update Account {{ account.0 }}</h2>
+  
+  <form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+      <label class="form-label">Account Type</label>
+      <select name="account_type" class="form-select" required>
+        <option value="Savings" {% if account.1 == "Savings" %}selected{% endif %}>Savings</option>
+        <option value="Current" {% if account.1 == "Current" %}selected{% endif %}>Current</option>
+        <option value="Fixed Deposit" {% if account.1 == "Fixed Deposit" %}selected{% endif %}>Fixed Deposit</option>
+      </select>
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label">Branch</label>
+      <select name="branch_id" class="form-select" required>
+        {% for b in branches %}
+          <option value="{{ b.0 }}" {% if b.0 == account.2 %}selected{% endif %}>{{ b.1 }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="{% url 'account_list' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

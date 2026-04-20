@@ -1,0 +1,61 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+  <h1>Session Diagnostics</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="button default">Run Diagnostics</button>
+  </form>
+
+  {% if error %}
+    <div style="margin-top: 20px; color: red;">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  {% endif %}
+
+  {% if diagnostics %}
+    <h2>Results (Diagnostics Dict)</h2>
+    <table class="grp-table">
+      <thead>
+        <tr>
+          {% for k,v in diagnostics.items %}
+            <th>{{ k }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {% for k,v in diagnostics.items %}
+            <td>{{ v }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if cols and rows %}
+    <h2>Results (Dynamic Table)</h2>
+    <table class="grp-table">
+      <thead>
+        <tr>
+          {% for col in cols %}
+            <th>{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            {% for val in row %}
+              <td>{{ val }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

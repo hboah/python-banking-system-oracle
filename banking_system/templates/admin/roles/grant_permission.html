@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="{% static 'admin/css/vendor/select2/select2.css' %}" rel="stylesheet">
+
+<!-- Load jQuery FIRST -->
+<script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
+
+<script>
+(function($){
+  $(function(){
+    var $sel = $('#id_permission.admin-autocomplete');
+    $sel.select2({
+      width: '100%',
+      placeholder: "Select permission...",
+      allowClear: true,
+      minimumInputLength: 0,
+      ajax: {
+        url: "{% url 'admin:banking_system_permissions_autocomplete' %}",
+        dataType: 'json',
+        delay: 200,
+        data: function(params){ return { term: params.term || '' }; },
+        processResults: function(data){ return data; }
+      }
+    });
+
+    // preload results when dropdown opens
+    $sel.on('select2:opening', function(){
+      if (!$sel.val()) {
+        $.ajax({
+          url: "{% url 'admin:banking_system_permissions_autocomplete' %}",
+          dataType: 'json',
+          data: { term: '' },
+          success: function(data){
+            (data.results || []).forEach(function(it){
+              if ($sel.find('option[value="'+it.id+'"]').length === 0) {
+                $sel.append(new Option(it.text, it.id, false, false));
+              }
+            });
+          }
+        });
+      }
+    });
+  });
+})(jQuery);
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="module aligned">
+  <h2>Grant Permission to {{ role.role_name }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <fieldset class="module">
+      <div class="form-row">
+        <label>Role:</label>
+        <strong>{{ role.role_name }}</strong>
+      </div>
+      <div class="form-row">
+        <label for="id_permission">Permission:</label>
+        <select name="permission_id" id="id_permission" class="admin-autocomplete" style="width:100%"></select>
+      </div>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" value="Grant Permission" class="default">
+      <a href="../../{{ role.pk }}/change/" class="button cancel-link">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

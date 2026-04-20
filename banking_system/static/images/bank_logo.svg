@@ -1,0 +1,16 @@
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text {
+      font-size: 20px;
+      font-family: Arial, sans-serif;
+      fill: #333333;
+      letter-spacing: 2px;
+    }
+    .large-text {
+      font-size: 40px;
+      font-weight: bold;
+    }
+  </style>
+  <text x="50" y="100" class="text large-text">BC</text>
+  <text x="50" y="120" class="text">BANK</text>
+</svg>

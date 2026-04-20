@@ -1,0 +1,59 @@
+/* static/css/custom.css */
+.btn-teal, .text-teal { color: #008080 !important; }
+.border-teal { border-color: #008080 !important; }
+.btn-teal-bg { background-color: #008080 !important; color: white !important; }
+/* --- Teal Theme Styles --- */
+.text-teal { color: #008080 !important; }
+.border-teal { border-color: #008080 !important; }
+
+.btn-teal-bg {
+  background-color: #008080 !important;
+  color: white !important;
+  transition: background 0.3s ease, transform 0.2s;
+}
+.btn-teal-bg:hover {
+  background-color: #009999 !important;
+  transform: translateY(-2px);
+}
+
+.btn-outline-teal {
+  border: 1px solid #008080 !important;
+  color: #008080 !important;
+  transition: all 0.3s ease;
+}
+.btn-outline-teal:hover {
+  background-color: #008080 !important;
+  color: white !important;
+}
+
+.table-teal {
+  background: linear-gradient(135deg, #007777, #009999);
+  color: white;
+}
+
+.teal-bg {
+  background-color: #008080 !important;
+  color: white !important;
+  border-color: #008080 !important;
+}
+
+.teal-link {
+  color: #008080 !important;
+  transition: color 0.3s ease, transform 0.2s;
+}
+.teal-link:hover {
+  color: #009999 !important;
+  text-decoration: underline;
+}
+
+/* Table Hover Effects */
+.account-table tbody tr:hover {
+  background-color: rgba(0, 128, 128, 0.08);
+  transition: background-color 0.2s ease;
+}
+
+/* Search Bar */
+.search-bar input:focus {
+  border-color: #009999 !important;
+  box-shadow: 0 0 6px rgba(0, 128, 128, 0.4);
+}

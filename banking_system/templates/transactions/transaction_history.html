@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Transaction History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4 text-teal fw-bold">Transaction History</h2>
+
+  <!-- ============================================Filter Form =======================================-->
+  <form method="get" class="row g-3 mb-4 shadow-sm p-3 bg-white rounded border-teal">
+    {% csrf_token %}
+    <div class="col-md-3">
+      <label class="fw-bold text-teal">Account Number
+      {{ form.account_number }}
+      </label>
+    </div>
+    <div class="col-md-2">
+      <label class="fw-bold text-teal">Start Date
+      {{ form.start_date }}
+    </label>
+    </div>
+    <div class="col-md-2">
+      <label class="fw-bold text-teal">End Date
+      {{ form.end_date }}
+      </label>
+    </div>
+    <div class="col-md-2">
+      <label class="fw-bold text-teal">Transaction Type
+      {{ form.transaction_type }}
+      </label>
+    </div>
+    <div class="col-md-2">
+      <label class="fw-bold text-teal">Status
+      {{ form.status }}
+      </label>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <button class="btn btn-teal-bg w-100" type="submit">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </form>
+
+  <!--===================================== Per Page + Total ==========================================-->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <div>
+      <form method="get" class="form-inline">
+        <label for="per_page" class="me-2 fw-bold text-teal">Show:</label>
+        <select name="per_page" id="per_page" class="form-select d-inline-block w-auto border-teal" onchange="this.form.submit()">
+          {% for option in per_page_options %}
+            <option value="{{ option }}" {% if option == per_page %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+        <span class="ms-1">entries</span>
+
+        <!-- Preserve filters -->
+        <input type="hidden" name="account_number" value="{{ form.data.account_number }}">
+        <input type="hidden" name="start_date" value="{{ form.data.start_date }}">
+        <input type="hidden" name="end_date" value="{{ form.data.end_date }}">
+        <input type="hidden" name="transaction_type" value="{{ form.data.transaction_type }}">
+        <input type="hidden" name="status" value="{{ form.data.status }}">
+        <input type="hidden" name="page" value="{{ page_obj.number }}">
+      </form>
+    </div>
+    <div>
+      <strong class="text-teal">Total: {{ page_obj.paginator.count }}</strong>
+    </div>
+  </div>
+
+  <!--=====================================DOWNLOAD AS PDF BUTTO================================================-->
+  <div class="d-flex justify-content-end mb-3">
+    {% if form.data.account_number %}
+    <a href="{% url 'transactions_pdf' form.data.account_number %}"
+       class="btn btn-danger shadow-sm">
+      <i class="bi bi-file-earmark-pdf"></i> Download as PDF
+    </a>
+    {% else %}
+    <button class="btn btn-danger shadow-sm" disabled title="Please select an account first">
+      <i class="bi bi-file-earmark-pdf"></i> Download as PDF
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- =======================================Transaction Table==================================================== -->
+  {% if transactions %}
+  <table class="table table-striped table-bordered text-sm align-middle shadow-sm" id="transactionTable">
+    <thead class="table-teal text-center sticky-top">
+      <tr>
+        {% for col in columns %}
+        <th>{{ col|prettify }}</th>
+        {% endfor %}
+      </tr>
+      
+    </thead>
+    <tbody>
+      {% for row in transactions %}
+      <tr class="transaction-row" data-row-id="{{ forloop.counter0 }}" style="cursor:pointer;">
+        {% for col, val in row.items %}
+        {% if col|lower == 'amount' %}
+        <td class="text-end fw-bold">
+          {% if row.Transaction_Type|lower == 'credit' %}
+          <span style="color:green;">💰 {{ val }}</span>
+          {% elif row.Transaction_Type|lower == 'debit' %}
+          <span style="color:red;">🔻 {{ val }}</span>
+          {% else %}
+          {{ val }}
+          {% endif %}
+        </td>
+        {% elif col|lower == 'status' %}
+        <td class="text-center">
+          {% if val|lower == 'success' %}
+          ✅ <span style="color:green;">{{ val }}</span>
+          {% elif val|lower == 'failed' %}
+          ❌ <span style="color:red;">{{ val }}</span>
+          {% elif val|lower == 'pending' %}
+          ⏳ <span style="color:orange;">{{ val }}</span>
+          {% else %}
+          {{ val }}
+          {% endif %}
+        </td>
+        {% elif col|lower == 'source_account' or col|lower == 'destination_account' %}
+        <td class="text-monospace text-center">{{ val }}</td>
+        {% elif col|lower == 'reversal_of' %}
+        <td>
+          {% if val %}
+            🔁 Reversal of #{{ val }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        {% else %}
+        <td>{{ val }}</td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+
+      <!--========================== JSON block per row to Store the JSON safely ============================-->
+      <script type="application/json" id="transaction-{{ forloop.counter0 }}">
+        {
+          "Transaction_ID": "{{ row.TRANSACTION_ID|escapejs }}",
+          "Account_Type": "{{ row.ACCOUNT_TYPE|escapejs }}",
+          "Account_Number": "{{ row.Account_Number|escapejs }}",
+          "Transaction_Date": "{{ row.TRANSACTION_DATE|escapejs }}",
+          "Transaction_Type": "{{ row.TRANSACTION_TYPE|escapejs }}",
+          "Source_Account": "{{ row.SOURCE_ACCOUNT|escapejs }}",
+          "Destination_Account": "{{ row.DESTINATION_ACCOUNT|escapejs }}",
+          "Amount": "{{ row.AMOUNT|escapejs }}",
+          "Description": "{{ row.DESCRIPTION|escapejs }}",
+          "Status": "{{ row.STATUS|escapejs }}",
+          "Balance_After": {% if row.BALANCE_AFTER %}"{{ row.BALANCE_AFTER|escapejs }}"{% else %}null{% endif %},
+          "Reversal_Of": "{{ row.REVERSAL_OF|escapejs }}"
+
+        }
+      </script>
+      
+      <!--  <pre>{{ row|safe }}</pre> -->
+
+        {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted text-center mt-3">No transactions found for the selected filters.</p>
+  {% endif %}
+
+ 
+  <!--===================================================== Pagination ======================================================-->
+{% with request.GET.urlencode as query_string %}
+<nav aria-label="Pagination">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link teal-link" href="?{{ query_string }}&page=1">&laquo; First</a>
+    </li>
+    <li class="page-item">
+      <a class="page-link teal-link" href="?{{ query_string }}&page={{ page_obj.previous_page_number }}">Previous</a>
+    </li>
+    {% endif %}
+    <li class="page-item active">
+      <span class="page-link teal-bg">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    </li>
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link teal-link" href="?{{ query_string }}&page={{ page_obj.next_page_number }}">Next</a>
+    </li>
+    <li class="page-item">
+      <a class="page-link teal-link" href="?{{ query_string }}&page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endwith %}
+</div>
+
+<!-- =========================================Transaction Detail Modal ====================================-->
+<div class="modal fade" id="transactionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Transaction Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <!--====================================MODAL BODY=======================================-->
+      <div class="modal-body">
+        <p><strong>ID:</strong> <span id="modalTransactionId"></span></p>
+        <p><strong>Account:</strong> <span id="modalAccountID"></span></p>
+        <p><strong>Amount:</strong> <span id="modalAmount"></span></p>
+        <p><strong>Type:</strong> <span id="modalType"></span></p>
+        <p><strong>Date:</strong> <span id="modalDate"></span></p>
+        <p><strong>Description:</strong> <span id="modalDescription"></span></p>
+        <p><strong>Balance After:</strong> <span id="modalBalanceAfter"></span></p>
+        <p><strong>Account Type:</strong> <span id="modalAccountType"></span></p>
+        <p><strong>Source Account:</strong> <span id="modalSourceAccount"></span></p>
+        <p><strong>Destination Account:</strong> <span id="modalDestinationAccount"></span></p>
+        <p><strong>Reversal Of:</strong> <span id="modalReversalOf"></span></p>
+
+        <div class="d-flex justify-content-end mb-2">
+          <button class="btn btn-sm btn-outline-teal me-2" id="toggleLineChart">Line</button>
+          <button class="btn btn-sm btn-outline-teal" id="toggleBarChart">Bar</button>
+        </div>
+        <!--CHART SPINNER HTML-->
+        <div id="chartLoader" class="text-center my-3">
+          <div class="spinner-border text-teal" role="status">
+            <span class="visually-hidden">Loading chart...</span>
+          </div>
+        </div>
+        <!--CHART CANVAS-->
+        <canvas id="balanceChart" height="80" style="opacity:0;"></canvas>       
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="javascript:void(0);" class="btn btn-outline-teal" id="downloadPdfBtn">Download as PDF</a>
+        <button class="btn btn-outline-teal" id="exportChartBtn">Export Chart</button>
+      </div>
+    </div>
+  </div>
+  
+</div>
+{% endblock %}
+
+<!-- ======================================= JAVA SCRIPT ===============================-->
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script id="chart-data" type="application/json">
+  {{ chart_data_json|safe }}
+</script>
+
+<script>
+  let balanceChart = null;
+  let chartType = 'line';
+
+  function getRandomColor() {
+    return `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
+  }
+
+  // ====================CHART FOR BALANCE HISTORY================
+  function renderBalanceChart(groupedData) {
+  const canvas = document.getElementById('balanceChart');
+  const loader = document.getElementById('chartLoader');
+
+  canvas.style.opacity = 0;
+  loader.style.opacity = 1;
+  loader.style.display = 'block';
+
+  setTimeout(() => {
+    const ctx = canvas.getContext('2d');
+    if (balanceChart) balanceChart.destroy();
+
+    const accountKeys = Object.keys(groupedData);
+    if (accountKeys.length === 0) {
+      console.warn('No chart data available for this account.');
+      loader.style.display = 'none';
+      return;
+    }
+
+    const firstAccount = accountKeys[0];
+    const labels = groupedData[firstAccount].map(d => d.date);
+
+    const datasets = accountKeys.map(account => {
+      const data = groupedData[account].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const balances = data.map(d => d.balance);
+      const dates = data.map(d => d.date);
+      const minBalance = Math.min(...balances);
+      const minIndex = balances.indexOf(minBalance);
+      const minDate = dates[minIndex];
+
+      return {
+        label: `Account ${account}`,
+        data: balances,
+        borderColor: getRandomColor(),
+        backgroundColor: chartType === 'line' ? 'rgba(0,0,0,0.05)' : getRandomColor(),
+        fill: chartType === 'line',
+        tension: 0.3,
+        annotation: {
+          annotations: {
+            [`low-${account}`]: {
+              type: 'point',
+              xValue: minDate,
+              yValue: minBalance,
+              backgroundColor: 'red',
+              radius: 5,
+              label: {
+                content: 'Lowest',
+                enabled: true,
+                position: 'top'
+              }
+            }
+          }
+        }
+      };
+    });
+
+    balanceChart = new Chart(ctx, {
+      type: chartType,
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        animation: {
+          duration: 600,
+          easing: 'easeOutQuart'
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: context => `₵${context.parsed.y.toFixed(2)}`
+            }
+          },
+          zoom: {
+            pan: { enabled: true, mode: 'x' },
+            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+          },
+          annotation: {
+            annotations: datasets.flatMap(ds => Object.values(ds.annotation.annotations))
+          }
+        },
+        scales: {
+          y: { beginAtZero: false }
+        }
+      } 
+    });
+
+    // Hide loader and fade in chart
+    loader.style.opacity = 0;
+    setTimeout(() => {
+      loader.style.display = 'none';
+      canvas.style.opacity = 1;
+    }, 300);
+  }, 300);
+}
+//=======================CLICK HANDLER=========================
+  document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('.transaction-row');
+    const chartDataElement = document.getElementById('chart-data');
+
+    let fullChartData = [];
+    try {
+      fullChartData = JSON.parse(chartDataElement.textContent || "[]");
+    } catch (err) {
+      console.error("Invalid chart data JSON:", err);
+      fullChartData = [];
+    }
+    // FOR LINE CHART
+    document.getElementById('toggleLineChart').addEventListener('click', () => {
+      chartType = 'line';
+      if (balanceChart) {
+        balanceChart.config.type = 'line';
+        // Reapply backgroundColor and fill for line chart
+        balanceChart.data.datasets.forEach(ds => {
+          ds.backgroundColor = 'rgba(0,0,0,0.05)';
+          ds.fill = true;
+        });
+        balanceChart.update('active');
+      }
+    });
+
+      // FOR BAR CHART
+    document.getElementById('toggleBarChart').addEventListener('click', () => {
+      chartType = 'bar';
+      if (balanceChart) {
+        balanceChart.config.type = 'bar';
+
+        // Reapply backgroundColor for bar chart
+        balanceChart.data.datasets.forEach(ds => {
+          ds.backgroundColor = getRandomColor(); // or a fixed color if you prefer
+          ds.fill = false;
+        });
+
+        balanceChart.update('active');
+      }
+    });
+
+    // ===========================EXPORTING CHART AS IMAGE====================
+    document.getElementById('exportChartBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.href = balanceChart.toBase64Image();
+      link.download = 'balance_trend_chart.png';
+      link.click();
+    });
+
+    
+
+    // ===========================DOWNLOAD CHART AS PDF====================
+    document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+      const pdf = new window.jspdf.jsPDF();
+      const cleanAmount = document.getElementById('modalAmount').textContent.replace('¢', 'GHS ');
+
+      const txFields = [
+        { label: "ID", value: document.getElementById('modalTransactionId').textContent },
+        { label: "Account", value: document.getElementById('modalAccountID').textContent },
+        { label: "Amount", value: document.getElementById('modalAmount').textContent.replace('¢', 'GHS ') },
+        { label: "Type", value: document.getElementById('modalType').textContent },
+        { label: "Date", value: document.getElementById('modalDate').textContent },
+        { label: "Description", value: document.getElementById('modalDescription').textContent },
+        { label: "Balance After", value: document.getElementById('modalBalanceAfter').textContent },
+        { label: "Account Type", value: document.getElementById('modalAccountType').textContent },
+        { label: "Source Account", value: document.getElementById('modalSourceAccount').textContent },
+        { label: "Destination Account", value: document.getElementById('modalDestinationAccount').textContent },
+        { label: "Reversal Of", value: document.getElementById('modalReversalOf').textContent }
+      ];
+
+      // Header
+      pdf.setFontSize(18);
+      pdf.text("Transaction Details", 10, 20);
+
+      // Fields
+      pdf.setFontSize(12);
+      let y = 30;
+      txFields.forEach(field => {
+        pdf.text(`${field.label}:`, 10, y);
+        pdf.text(field.value || '—', 60, y);
+        y += 8;
+      });
+
+      // Add chart image only once
+      const chartCanvas = document.getElementById('balanceChart');
+      if (chartCanvas) {
+        const chartImage = chartCanvas.toDataURL('image/png');
+        pdf.addPage();
+        pdf.setFontSize(16);
+        pdf.text("Balance Trend Chart", 10, 20);
+        pdf.addImage(chartImage, 'PNG', 10, 30, 190, 100);
+      }
+
+      pdf.save('transaction_details.pdf');
+    });
+
+    rows.forEach(row => {
+      row.addEventListener('click', function () {
+        const transactionId = this.dataset.rowId;
+        const jsonElement = document.getElementById('transaction-' + transactionId);
+        if (!jsonElement) return;
+
+        const txData = JSON.parse(jsonElement.textContent);
+
+        // ===================================JSON TO POPULATE MODAL FIELDS===============================
+        document.getElementById('modalTransactionId').textContent = txData.Transaction_ID;
+        document.getElementById('modalAccountID').textContent = txData["Account_Number"];
+        document.getElementById('modalAmount').textContent = txData.Amount;
+        document.getElementById('modalType').textContent = txData.Transaction_Type;
+        document.getElementById('modalDate').textContent = txData.Transaction_Date;
+        document.getElementById('modalDescription').textContent = txData.Description;
+        document.getElementById('modalBalanceAfter').textContent = txData.Balance_After;
+        document.getElementById('modalAccountType').textContent = txData.Account_Type;
+        document.getElementById('modalSourceAccount').textContent = txData.Source_Account;
+        document.getElementById('modalDestinationAccount').textContent = txData.Destination_Account;
+        document.getElementById('modalReversalOf').textContent = txData.Reversal_Of || '—';
+        console.log("Transaction JSON:", txData);
+
+        // Group chart data by account
+        const grouped = {};
+        fullChartData.forEach(item => {
+          if (!item.account || !item.balance || !item.date) return;
+          if (!grouped[item.account]) grouped[item.account] = [];
+          grouped[item.account].push(item);
+        });
+        console.log('Grouped chart data:', grouped);
+        // Show modal
+        const modalEl = document.getElementById('transactionModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
+
+        // Render chart after modal is visible
+        setTimeout(() => {
+          renderBalanceChart(grouped);
+        }, 300);
+      });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const downloadBtn = document.getElementById('downloadPdfBtn');
+    if (!downloadBtn) {
+      console.error("Download button not found");
+      return;
+    }
+
+    downloadBtn.addEventListener('click', async () => {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        console.error("jsPDF not loaded");
+        return;
+      }
+
+      const pdf = new window.jspdf.jsPDF();
+
+      const modalContent = document.getElementById('transactionModalBody');
+      if (!modalContent) {
+        console.error("Modal content not found");
+        return;
+      }
+
+      try {
+        const modalCanvas = await html2canvas(modalContent, {
+          scale: 2,
+          useCORS: true
+        });
+        const modalImage = modalCanvas.toDataURL('image/png');
+
+        pdf.addImage(modalImage, 'PNG', 10, 10, 190, 0); // auto height
+
+        const chartCanvas = document.getElementById('balanceChart');
+        if (chartCanvas) {
+          const chartImage = chartCanvas.toDataURL('image/png');
+          pdf.addPage();
+          pdf.addImage(chartImage, 'PNG', 10, 10, 190, 100);
+        }
+
+        pdf.save('transaction_details.pdf');
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+      }
+    });
+  });
+</script>
+
+    <style>
+      .text-teal { color: #008080; }
+      .border-teal { border: 1px solid #008080; }
+      .bg-teal { background-color: #008080 !important; }
+      .btn-teal-bg { background-color: #008080; color: white; }
+      .btn-teal-bg:hover { background-color: #006666; color: white; }
+      table.table tbody tr:hover { background-color: #f1fdfd; }
+      .modal-content { border-radius: 10px; }
+      .modal-header, .modal-footer { border: none; }
+      .modal.fade .modal-dialog { transform: translate(0, -25%); transition: transform 0.3s ease-out; }
+      .modal.show .modal-dialog { transform: translate(0, 0); }
+      #balanceChart {
+      margin-top: 20px;
+      }
+      .btn-outline-teal {
+        border-color: #008080;
+        color: #008080;
+      }
+      .btn-outline-teal:hover {
+        background-color: #008080;
+        color: white;
+      }
+      #balanceChart {
+        transition: opacity 0.4s ease-in-out;
+      }
+      #chartLoader {
+        transition: opacity 0.3s ease-out;
+      }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+{% endblock %}

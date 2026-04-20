@@ -1,0 +1,136 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1 style="margin-bottom: 20px;">Permissions for {{ user.username }}</h1>
+
+  {% if oracle_perms %}
+    <!-- Search + Filter Controls -->
+    <div style="margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      <input id="permSearch" type="text" 
+             placeholder="🔍 Search permissions..." 
+             style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; flex: 1; min-width: 200px;">
+
+      <select id="moduleFilter" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px;">
+        <option value="">All Modules</option>
+        {% for perm in oracle_perms %}
+          <option value="{{ perm.1 }}">{{ perm.1 }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Export Buttons -->
+      <div style="margin-bottom: 15px;">
+  <a href="{% url 'admin:banking_system_cbacuser_export_perms_csv' user_id %}"
+     class="button"
+     style="background: green; color: white; padding: 6px 12px; border-radius: 4px; margin-right: 10px;">
+     ⬇ Export to CSV
+  </a>
+
+  <a href="{% url 'admin:banking_system_cbacuser_export_perms_xlsx' user_id %}"
+     class="button"
+     style="background: blue; color: white; padding: 6px 12px; border-radius: 4px;">
+     ⬇ Export to Excel
+  </a>
+</div>
+
+    </div>
+
+    <div style="overflow-x:auto; max-height: 500px; border: 1px solid #ddd;">
+      <table id="permTable" class="table table-bordered" 
+             style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead style="background-color: #343a40; color: white; text-align: left; position: sticky; top: 0; z-index: 2;">
+          <tr>
+            <th style="padding: 8px; width: 50px; text-align: center;">#</th>
+            <th style="padding: 8px;">Permission</th>
+            <th style="padding: 8px;">Role</th>
+            <th style="padding: 8px;">Module</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for perm in oracle_perms %}
+            <tr style="background-color: {% cycle '#f9f9f9' 'white' %};">
+              <td style="padding: 8px; text-align: center;">{{ forloop.counter }}</td>
+              <td style="padding: 8px;">{{ perm.0 }}</td>
+              <td style="padding: 8px;">{{ perm.1 }}</td>
+              <td style="padding: 8px;">{{ perm.2 }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 10px; color: #888;">
+                No permissions found for this user.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Filtering + Export Scripts -->
+    <script>
+      const searchInput = document.getElementById("permSearch");
+      const moduleFilter = document.getElementById("moduleFilter");
+      const table = document.getElementById("permTable");
+      const rows = table.getElementsByTagName("tr");
+
+      function filterTable() {
+        const searchValue = searchInput.value.toLowerCase();
+        const moduleValue = moduleFilter.value;
+
+        for (let i = 1; i < rows.length; i++) {
+          const cells = rows[i].getElementsByTagName("td");
+          if (!cells.length) continue;
+
+          const permName = cells[1].innerText.toLowerCase();
+          const module = cells[2].innerText;
+          const role = cells[3].innerText.toLowerCase();
+
+          let matchesSearch = 
+            permName.includes(searchValue) || 
+            module.toLowerCase().includes(searchValue) || 
+            role.includes(searchValue);
+
+          let matchesModule = !moduleValue || module === moduleValue;
+
+          rows[i].style.display = (matchesSearch && matchesModule) ? "" : "none";
+        }
+      }
+
+      searchInput.addEventListener("keyup", filterTable);
+      moduleFilter.addEventListener("change", filterTable);
+
+      // CSV Export
+      function exportTableToCSV(filename) {
+        let csv = [];
+        const rows = document.querySelectorAll("#permTable tr");
+
+        for (let i = 0; i < rows.length; i++) {
+          const cols = rows[i].querySelectorAll("td, th");
+          let row = [];
+          for (let j = 0; j < cols.length; j++) {
+            row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+          }
+          csv.push(row.join(","));
+        }
+
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.click();
+      }
+
+      // Excel Export
+      function exportTableToExcel(filename) {
+        let tableHTML = document.getElementById("permTable").outerHTML.replace(/ /g, "%20");
+        const dataType = "application/vnd.ms-excel";
+        const downloadLink = document.createElement("a");
+
+        downloadLink.href = "data:" + dataType + ", " + tableHTML;
+        downloadLink.download = filename;
+        downloadLink.click();
+      }
+    </script>
+
+  {% else %}
+    <p style="font-style: italic; color: #888;">No permissions available.</p>
+  {% endif %}
+{% endblock %}

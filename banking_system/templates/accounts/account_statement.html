@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-teal fw-bold">Account Statement for: {{ account_number }}</h2>
+
+  <ul>
+    <!-- Per Page Selector -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+      <div>
+        <form method="get" class="form-inline">
+          <label for="per_page" class="me-2">Show:</label>
+          <select name="per_page" id="per_page" class="form-select d-inline-block w-auto border-teal"
+                  onchange="this.form.submit()">
+            {% for option in per_page_options %}
+              <option value="{{ option }}" {% if option == per_page %}selected{% endif %}>
+                {{ option }}
+              </option>
+            {% endfor %}
+          </select>
+          <span class="ms-1">entries</span>
+          <input type="hidden" name="page" value="{{ page_obj.number }}">
+          {% if request.GET.search %}
+            <input type="hidden" name="search" value="{{ request.GET.search }}">
+          {% endif %}
+        </form>
+      </div>
+
+      {% if transactions %}
+      <div class="table-responsive">
+        <a href="{% url 'account_statement_pdf' account_number %}" class="btn btn-outline-teal mt-3">
+          <i class="bi bi-file-earmark-pdf"></i> Download PDF
+        </a>
+
+        <div>
+          <strong class="text-teal">Total: {{ page_obj.paginator.count }}</strong>
+        </div>
+    </div>
+  </ul>
+
+      <table class="table table-bordered mt-3">
+        <thead class="table-teal sticky-header" style="background-color: #008080; color: white;">
+          <tr>
+            <th>Txn ID</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Amount (₵)</th>
+            <th>Source Account</th>
+            <th>Destination Account</th>
+            <th>Description</th>
+            <th>Reversal Of</th>
+            <th>Status</th>
+            <th>Balance After (₵)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for txn in transactions %}
+          <tr>
+            <td>{{ txn.txn_id }}</td>
+            <td>{{ txn.date|date:"Y-m-d H:i" }}</td>
+            <td>{{ txn.type }}</td>
+            <td class="fw-bold text-success">₵{{ txn.amount }}</td>
+            <td>{{ txn.source_account }}</td>
+            <td>{{ txn.destination_account }}</td>
+            <td>{{ txn.description }}</td>
+            <td>{{ txn.reversal_of }}</td>
+            <td>{{ txn.status }}</td>
+            <td class="fw-bold text-primary">₵{{ txn.balance }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-warning">No transactions found for this account.</div>
+    {% endif %}
+
+    <a href="{% url 'account_list' %}" class="btn btn-secondary mt-3">Back to Accounts</a>
+</div>
+
+<style>
+  .btn-outline-teal {
+    border: 2px solid #008080;
+    color: #008080;
+  }
+  .btn-outline-teal:hover {
+    background-color: #008080;
+    color: white;
+  }
+</style>
+
+<!-- 📄 Pagination -->
+  <nav aria-label="Account statement pagination">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link teal-link" href="?page=1&per_page={{ per_page }}&search={{ request.GET.search }}">&laquo; First</a>
+        </li>
+        
+        <li class="page-item">
+          <a class="page-link teal-link" href="?page={{ page_obj.previous_page_number }}&per_page={{ per_page }}&search={{ request.GET.search }}">Previous</a>
+        </li>
+      {% endif %}
+
+      <li class="page-item active">
+        <span class="page-link teal-bg"> Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} </span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link teal-link" href="?page={{ page_obj.next_page_number }}&per_page={{ per_page }}&search={{ request.GET.search }}">Next</a>
+        </li>
+
+        <li class="page-item">
+          <a class="page-link teal-link" href="?page={{ page_obj.paginator.num_pages }}&per_page={{ per_page }}&search={{ request.GET.search }}">Last &raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endblock %}

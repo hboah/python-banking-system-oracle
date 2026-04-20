@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block extra_head %}
+  <!-- Page-specific CSS/JS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    .bg-teal { background-color: #22758eff !important; }
+    .fieldset-header {
+      background-color: #22758eff;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-teal {
+      background-color: #0c4b33;
+      border: none;
+    }
+    .btn-teal:hover {
+      background-color: #0a3827;
+    }
+    .is-valid { border-color: #198754 !important; }
+    .is-invalid { border-color: #dc3545 !important; }
+    .valid-icon, .invalid-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2rem;
+      display: none;
+      pointer-events: none;
+    }
+    .is-valid ~ .valid-icon { display: inline; color: green; }
+    .is-invalid ~ .invalid-icon { display: inline; color: red; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-teal text-white text-center">
+          <h4 class="mb-0"><i class="bi bi-person-plus-fill"></i> Register Customer</h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" novalidate class="needs-validation" id="customerForm">
+            {% csrf_token %}
+
+            <!-- Personal Info -->
+            <div class="fieldset-header"><i class="bi bi-person-badge"></i> Personal Information</div>
+
+            <div class="mb-3">
+              <label class="form-label">First Name</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                {{ form.first_name|add_class:"form-control"|attr:"required:true" }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Last Name</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                {{ form.last_name|add_class:"form-control"|attr:"required:true" }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Gender</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
+                {{ form.gender|add_class:"form-select"|attr:"required:true" }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Date of Birth</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                {{ form.date_of_birth|add_class:"form-control datepicker"|attr:"required:true" }}
+              </div>
+            </div>
+
+            <!-- Identification -->
+            <div class="fieldset-header"><i class="bi bi-card-list"></i> Identification</div>
+
+            <div class="mb-3">
+              <label class="form-label">ID Type</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                {{ form.id_type|add_class:"form-select"|attr:"required:true" }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">ID Number</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                {{ form.id_number|add_class:"form-control"|attr:"required:true pattern:\d* title:Enter digits only" }}
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="fieldset-header"><i class="bi bi-envelope-at"></i> Contact Information</div>
+
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                {{ form.email|add_class:"form-control"|attr:"type:email"|attr:"required" }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Phone Number</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                {{ form.phone_number|add_class:"form-control"|attr:"required"|attr:"pattern:\d{10,15}"|attr:"title:Enter a valid phone number" }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Address</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                {{ form.address|add_class:"form-control"|attr:"required:true" }}
+              </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="fieldset-header"><i class="bi bi-gear"></i> System Information</div>
+
+            <div class="mb-3">
+              <label class="form-label">Role</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person-gear"></i></span>
+                {{ form.role_id|add_class:"form-select"|attr:"required:true" }}
+                <input type="hidden" name="role_id" value="{{ form.role_id.value }}">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-toggle-on"></i></span>
+                {{ form.status|add_class:"form-select"|attr:"required:true" }}
+                <input type="hidden" name="status" value="{{ form.status.value }}">
+              </div>
+            </div>
+
+            <button type="submit" class="btn bg-teal text-white w-100 py-2 mt-3">
+              <i class="bi bi-save bg-teal text-white text-center"></i> Register
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Bootstrap custom validation + live feedback
+  (() => {
+    'use strict'
+    const form = document.getElementById('customerForm')
+    const inputs = form.querySelectorAll('input, select')
+
+    inputs.forEach(input => {
+      input.addEventListener('input', () => {
+        if (input.checkValidity()) {
+          input.classList.add('is-valid')
+          input.classList.remove('is-invalid')
+        } else {
+          input.classList.add('is-invalid')
+          input.classList.remove('is-valid')
+        }
+      })
+    })
+
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })()
+</script>
+{% endblock %}

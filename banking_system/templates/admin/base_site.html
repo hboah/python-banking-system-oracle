@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">Django Admin</a>
+        <span style="margin-left: 20px;">
+            <a href="{% url 'dashboard' %}" class="banking-link">
+                Banking Dashboard
+            </a>
+        </span>
+    </h1>
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+    /* Fix for admin action buttons in table cells */
+    .admin-action-buttons {
+        display: flex;
+        flex-wrap: nowrap;     
+        gap: 6px;              
+        overflow-x: auto;      
+        padding: 2px 0;
+        max-width: 100%;       
+    }
+
+    .admin-action-buttons::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .admin-action-buttons a.button {
+        white-space: nowrap;  
+        padding: 3px 8px;
+        font-size: 12px;
+    }
+
+    /* 🔹 Restore default admin button colors */
+    .button {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #79aec8;   /* Django admin blue */
+        color: #fff !important;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 13px;
+    }
+    .button:hover {
+        background: #609ab6;
+    }
+
+    /* 🔹 Special button states */
+    .button.cancel-link {
+        background: #ba2121;  /* Red cancel */
+    }
+    .button.cancel-link:hover {
+        background: #a41515;
+    }
+
+    .button.text-danger {
+        background: #d9534f;  /* Bootstrap-style red */
+    }
+    .button.text-danger:hover {
+        background: #c9302c;
+    }
+
+    .button.text-warning {
+        background: #f0ad4e;  /* Bootstrap-style orange */
+    }
+    .button.text-warning:hover {
+        background: #ec971f;
+    }
+
+    /* Make results container scrollable */
+#changelist .results {
+    max-height: 70vh;    /* adjust as needed */
+    overflow-y: auto;
+}
+
+/* Sticky headers */
+#changelist table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f8f8f8;
+    border-bottom: 2px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
+
+{% endblock %}

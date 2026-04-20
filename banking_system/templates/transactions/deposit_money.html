@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Deposit Money{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center text-success">Deposit Money</h2>
+  <form method="post" class="shadow p-4 bg-white rounded">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success w-100 mt-3">
+      <i class="bi bi-bank"></i> Deposit
+    </button>
+  </form>
+</div>
+{% endblock %}

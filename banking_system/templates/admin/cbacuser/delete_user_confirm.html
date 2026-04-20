@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+  <div id="content-main" class="module">
+    <h1 style="margin-bottom: 20px;">Delete Role <strong>{{ role.role_name }}</strong>?</h1>
+
+    <form method="post" class="form-inline">
+      {% csrf_token %}
+      
+      <fieldset class="module aligned">
+        <div class="form-row">
+          <p>Are you sure you want to delete the role <strong>{{ role.role_name }}</strong>? This action cannot be undone.</p>
+        </div>
+      </fieldset>
+
+      <div class="submit-row" style="margin-top: 20px;">
+        <input type="submit" value="Yes, delete" class="default deletelink" />
+        <a href="{% url 'admin:banking_system_cbacuser_changelist' %}" 
+           class="button cancel-link">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

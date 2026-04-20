@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+  <div id="content-main" class="module">
+    <h1 style="margin-bottom: 20px;">Logs for <strong>{{ user.username }}</strong></h1>
+
+    {% if rows %}
+      <table class="table">
+        <thead>
+          <tr>{% for c in cols %}<th>{{ c }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>{% for v in row %}<td>{{ v }}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No logs found or error fetching logs.</p>
+    {% endif %}
+
+    <div class="submit-row" style="margin-top: 20px;">
+      <a href="{% url 'admin:banking_system_cbacuser_changelist' %}" 
+         class="button cancel-link">Back</a>
+    </div>
+  </div>
+{% endblock %}

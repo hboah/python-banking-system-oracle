@@ -1,0 +1,463 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+  {% block title %}
+    {% if request.resolver_match.url_name == 'dashboard' %}
+      BC BANK DASHBOARD
+    {% elif request.resolver_match.url_name == 'register' %}
+      Register - BC Bank
+    {% elif request.resolver_match.url_name == 'login' %}
+      Login - BC Bank
+    {% elif request.resolver_match.url_name == 'register_customer' %}
+      Customers - BC Bank
+    {% else %}
+      BC Bank
+    {% endif %}
+  {% endblock %}
+</title>
+  
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Font Awesome (for eye toggle) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Datepicker CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/css/bootstrap-datepicker.min.css">
+
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+
+<!-- Toast script -->
+<script>
+  document.querySelectorAll('.toast').forEach((toastEl, index) => {
+    const delay = 4000 + (index * 500); // each toast stays visible for 4s
+    const toast = new bootstrap.Toast(toastEl, { delay: delay });
+    setTimeout(() => toast.show(), index * 500); // small delay for staggered animation
+  });
+</script>
+
+<!-- Notification Sound script-->
+
+<audio id="toastSound" preload="auto">
+  <source src="{% static 'sounds/notify.mp3' %}" type="audio/mpeg" />
+  <!-- fallback sources if needed -->
+</audio>
+
+<!-- Toast script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toastEls = document.querySelectorAll('.toast');
+    const sound = document.getElementById("toastSound");
+
+    toastEls.forEach((toastEl, idx) => {
+      // Show with a slight stagger
+      setTimeout(() => {
+        const toastObj = new bootstrap.Toast(toastEl, { delay: 4000 });
+        toastObj.show();
+      }, idx * 200);  // 200ms stagger between toasts
+
+      toastEl.addEventListener('shown.bs.toast', () => {
+        // play sound each time a toast appears
+        if (sound) {
+          sound.currentTime = 0;
+          sound.play().catch(() => {
+            // ignore play errors (e.g. user’s browser policies)
+          });
+        }
+      });
+    });
+  });
+</script>
+
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .bg-teal {
+      background-color: #22758eff !important;
+    }
+    .fieldset-header {
+      background-color: #22758eff;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-custom {
+      background-color: #22758e !important;
+      color: white !important;
+      border: none;
+    }
+    .btn-custom:hover {
+      background-color: #1b5c70 !important;
+    }
+
+    /* small tweak so .me-3 greeting aligns nicely within nav */
+    .navbar .greeting {
+      color: #fff;
+      margin-right: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* ensure small logout button spacing */
+    .nav-btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: .8rem;
+      line-height: 1;
+    }
+
+    /* Customize Bootstrap Datepicker */
+  .datepicker-dropdown {
+    z-index: 9999 !important;  /* ensures it shows above modal or navbar */
+  }
+
+  .datepicker table tr td.day:hover,
+  .datepicker table tr td.focused {
+    background: #0c4b33 !important;
+    color: white !important;
+    border-radius: 50%;
+  }
+
+  .datepicker table tr td.active,
+  .datepicker table tr td.active:hover {
+    background-color: #0c4b33 !important;
+    border-color: #0c4b33 !important;
+    color: #fff !important;
+    border-radius: 50%;
+  }
+
+  .datepicker table tr td.today {
+    background-color: #d1f2eb !important;
+    border-radius: 50%;
+  }
+
+  .datepicker .datepicker-switch,
+  .datepicker .prev,
+  .datepicker .next {
+    color: #0c4b33;
+  }
+
+  /* Teal table header */
+.table-teal th {
+  background-color: #22758e !important;
+  color: #fff !important;
+}
+
+/* Sticky header */
+.sticky-header th {
+  position: sticky;
+  top: 0;
+  z-index: 2; /* ensures it stays above rows */
+}
+
+  .bg-teal {
+    background-color: #22758e !important; /* Nav bar Teal */
+  }
+  .toast-container {
+    top: 1rem;
+    right: 1rem;
+    opacity: 8;
+  }
+  
+  .toast {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+</style>
+
+  {% block extra_head %}{% endblock %}
+  
+</head>
+
+<body>
+
+  <!-- Navbar (merged old + new) -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-teal">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        {% if request.resolver_match.url_name == 'dashboard' %}
+          BC BANK DASHBOARD
+        {% elif request.resolver_match.url_name == 'register' %}
+          Register
+        {% elif request.resolver_match.url_name == 'login' %}
+          Login
+        {% elif request.resolver_match.url_name == 'register_customer' %}
+          CUSTOMERS
+        {% else %}
+          BC Bank
+        {% endif %}
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center">
+
+          {% if user.is_authenticated %}
+            <!-- greeting (from old version) -->
+          <li class="nav-item d-flex align-items-center">
+            <span class="greeting me-2">Hello, {{ user.username }}</span>
+            <lottie-player src="{% static 'animations/Waving.json' %}"
+               background="transparent"
+               speed="0.5"
+               style="width:35px; height:35px;"
+               loop
+               autoplay>
+            </lottie-player>
+          </li>
+          
+          <!-- dashboard link (keeps "hide on dashboard" behavior) -->
+          {% if request.resolver_match.url_name != 'dashboard' %}
+          <li class="nav-item me-2">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+          </li>
+          {% endif %}
+
+          <!-- logout -> goes to logout_confirm page (GET) -->
+          <li class="nav-item">
+            <a href="{% url 'logout_confirm' %}" class="btn btn-danger">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          </li>
+            
+          {% else %}
+          <!-- not authenticated -->
+          <li class="nav-item me-2">
+            <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'register_customer' %}">Register</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container my-5">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Scripts -->
+  <!-- jQuery (needed by Bootstrap Datepicker) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Bootstrap Datepicker JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/js/bootstrap-datepicker.min.js"></script>
+
+  <script>
+    // --------------SCRIPT FOR DATEPICKER ON ALL PAGES
+    document.addEventListener("DOMContentLoaded", function () {
+      // Activate Bootstrap datepicker on all inputs with .datepicker
+      $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        todayHighlight: true,
+        orientation: "bottom auto"
+      })
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const toastElList = [].slice.call(document.querySelectorAll(".toast"));
+      toastElList.forEach(function (toastEl) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      });
+    });
+  </script>
+
+  <!-- Toast Notifications -->
+  {% if messages %}
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+    {% for message in messages %}
+      <div class="toast fade border-0
+        {% if message.tags == 'success' %} text-bg-success
+        {% elif message.tags == 'warning' %} text-bg-warning
+        {% elif message.tags == 'error' %} text-bg-danger
+        {% elif message.tags == 'info' %} text-bg-info
+        {% else %} text-bg-primary {% endif %}"
+        role="alert" aria-live="assertive" aria-atomic="true">
+
+        <div class="d-flex align-items-center p-2">
+          <div class="me-2">
+            {% if message.tags == 'success' %}
+              <i class="bi bi-check-circle-fill text-white fs-5"></i>
+            {% elif message.tags == 'warning' %}
+              <i class="bi bi-exclamation-triangle-fill text-dark fs-5"></i>
+            {% elif message.tags == 'error' %}
+              <i class="bi bi-x-circle-fill text-white fs-5"></i>
+            {% elif message.tags == 'info' %}
+              <i class="bi bi-info-circle-fill text-dark fs-5"></i>
+            {% else %}
+              <i class="bi bi-bell-fill text-white fs-5"></i>
+            {% endif %}
+          </div>
+
+          <div class="toast-body fs-6">
+            {{ message }}
+          </div>
+
+          <button type="button" class="btn-close btn-close-white ms-auto me-2"
+                  data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+  <!-- 🔊 Toast Notification Sound -->
+  <audio id="toastSound" preload="auto">
+    <source src="{% static 'sounds/notify.mp3' %}" type="audio/mpeg">
+  </audio>
+
+  <!-- ✨ Toast Initialization Script -->
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toastEls = document.querySelectorAll('.toast');
+    const sound = document.getElementById("toastSound");
+
+    toastEls.forEach((toastEl, index) => {
+      const delay = 4000 + index * 500; // 4s per toast, staggered
+      const toastObj = new bootstrap.Toast(toastEl, { delay: delay });
+
+      setTimeout(() => toastObj.show(), index * 500);
+
+      toastEl.addEventListener('shown.bs.toast', () => {
+        if (sound) {
+          sound.currentTime = 0;
+          sound.play().catch(() => { /* ignore autoplay errors */ });
+        }
+      });
+    });
+  });
+  </script>
+
+  <!-- 🎨 Toast Styling -->
+  <style>
+  .toast {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  /* 🎞 Toast slide-in animation */
+  @keyframes toastSlideIn {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    60% {
+      transform: translateX(-10%);
+      opacity: 1;
+    }
+    80% {
+      transform: translateX(5%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes toastFadeOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100%); }
+  }
+
+  .toast.hide {
+    animation: toastFadeOut 0.4s ease-in forwards;
+  }
+
+  /* Apply animation to toast */
+  .toast.show {
+    animation: toastSlideIn 0.6s ease-out;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .toast.text-bg-success {
+    background-color: #198754 !important;
+    color: white !important;
+  }
+  .toast.text-bg-warning {
+    background-color: #ffc107 !important;
+    color: black !important;
+  }
+  .toast.text-bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+  }
+  .toast.text-bg-info {
+    background-color: #0dcaf0 !important;
+    color: black !important;
+  }
+  .toast.text-bg-primary {
+    background-color: #008080 !important;
+    color: white !important;
+  }
+  /* 🌟 Enhanced Toast Design */
+  .toast {
+    border-radius: 0.8rem !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .toast-body {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .toast .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+  }
+
+  .toast .btn-close:hover {
+    opacity: 1;
+  }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossorigin="anonymous">
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body> 
+</html>
