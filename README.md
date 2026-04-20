@@ -5,7 +5,6 @@ A robust **Banking System** built in Python that connects to **Oracle Database**
 This project demonstrates clean architecture: Python for the application layer and **Oracle Database** handling accounts, transactions, validation rules, and persistence.
 
 ![System Architecture](screenshots/architecture.png)  
-*(Add a simple diagram later showing Python ↔ Oracle)*
 
 ## ✨ Features
 
